@@ -1,5 +1,5 @@
 /* Our own header, to be included before all standard system headers */
-#include "error.c" 
+
 #ifndef _APUE_H
 #define _APUE_H
 
@@ -22,7 +22,7 @@
 #include <string.h> /* for convenience */
 #include <unistd.h> /* for convenience */
 #include <signal.h> /* for SIG_ERR */
-
+#include "error.c" 
 #define MAXLINE 4096 /* max line length */
 
 /*
