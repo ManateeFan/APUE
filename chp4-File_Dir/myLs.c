@@ -1,77 +1,155 @@
-#include <dirent.h>
-#include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <sys/stat.h> // stat()
+#include <stdio.h>
 #include <unistd.h>
+#include <dirent.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <time.h>
 
-int isDir(char* fileName); // 判断是否是目录
-void listDir(char* fileName); // 打印目录主函数
+// 出错处理
+void sys_err(const char *str);
 
-int main(int argc, char* argv[])
+// 打印一个目录
+void printDir(char *dirPath);
+
+// ls -l
+void detailDir(char *path);
+
+// 获取文件类型
+void file_type(mode_t mode);
+
+int main(int argc, char *argv[])
 {
-    if (argc < 2 || strcmp(argv[1], "--help") == 0)
+    if (argc > 1 && strcmp(argv[1], "--help") == 0)
     {
-        printf("Usage : %s dir", argv[0]);
+        printf("Usage:%s -l path", argv[0]);
         exit(0);
     }
+    char dirCur[30];
+    // 获取进程当前目录
+    if (getcwd(dirCur, 30) == NULL)
+        sys_err("getcwd()");
 
-    listDir(argv[1]);
+    // ls
+    if (argc == 1)
+    {
+        // 列当前目录
+        printDir(dirCur);
+    }
+    // ls -l dir dir dir ...
+    else if (argc == 2 && strcmp(argv[1], "-l") == 0)
+    {
+        detailDir(dirCur);
+    }
+    else if (argc > 2)
+    {
+        for(int i = 2; i < argc; i++)
+            {
+                printf("%s:\n", argv[i]);
+                detailDir(argv[i]);
+            }
+    }
+        else // ls dir
+        {
+            for (int i = 1; i < argc; i++)
+            {
+                printf("%s:", argv[i]);
+                printDir(argv[i]);
+            }
+        }
 
     exit(0);
 }
 
-int isDir(char* fileName)
+void file_type(mode_t mode)
 {
-    struct stat tmp;
-    // 获取文件状态信息，放入tmp结构
-    if (stat(fileName, &tmp) == -1)
-    {
-        perror("stat");
-        exit(1);
-    }
-    // 是否为目录
-    if (S_ISDIR(tmp.st_mode))
-        return 1;
-    return 0;
+    char *ptr;
+    if (S_ISREG(mode)) // 普通文件
+        ptr = "Regular";
+    else if (S_ISDIR(mode)) // 目录
+        ptr = "Directory";
+    else if (S_ISCHR(mode)) // 字符处理
+        ptr = "character special";
+    else if (S_ISBLK(mode)) // 块处理
+        ptr = "block special";
+    else if (S_ISFIFO(mode)) // fifo
+        ptr = "fifo";
+    else if (S_ISLNK(mode)) // 链接
+        ptr = "symbolic link";
+    else if (S_ISSOCK(mode)) // socket
+        ptr = "socket";
+    else
+        ptr = "Unknown type";
+    printf("%s\t", ptr);
 }
 
-void listDir(char* fileName)
+void printDir(char *dirPath)
 {
-    DIR* dirp = NULL;
-    // 打开目录
-    if ((dirp = opendir(fileName)) == NULL)
-    {
-        perror("opendir()");
-        exit(1);
-    }
+    DIR *pDir = opendir(dirPath);
+    if (pDir == NULL)
+        sys_err("opendir()");
 
-    // 获取当前工作目录
-    char curDir[256];
-    if (getcwd(curDir, 256) == NULL)
+    // 目录项
+    struct dirent *tmpDent;
+    int i = 0;
+    while (tmpDent = readdir(pDir))
     {
-        perror("getcwd()");
-        exit(1);
-    }
-
-    struct dirent* dtp = NULL;
-    while ((dtp = readdir(dirp)) != NULL)
-    {
-        char tmpName[256];
-        // 获取该目录项中的文件名
-        char* name = dtp->d_name;
-        if (name[0] == '.')
+        // 不打印父目录与自己
+        if (strcmp(".", tmpDent->d_name) == 0 || strcmp("..", tmpDent->d_name) == 0)
             continue;
-        // tmpName为该文件的绝对目录
-        fprintf(tmpName, "%s/%s", curDir, name);
-        // 如果不是目录
-        if (isDir(tmpName) == 0)
-        {
-            printf("%s\n", tmpName);
-        }
         else
-        {
-            listDir(tmpName);
-        }
+            printf("%-s  ", tmpDent->d_name);
+
+        // 一行打印5个
+        if (i % 5 == 0)
+            printf("\n");
+        i++;
     }
+    printf("\n");
+}
+
+void detailDir(char *path)
+{
+
+    printf("%s:\n", path);
+    // 获取文件信息结构体
+    struct stat statBuf;
+
+    // 打开目录
+    DIR *pDir = opendir(path);
+    if (pDir == NULL)
+        sys_err("opendir()");
+
+    struct dirent *tmpDent;
+    // 读目录
+    while (tmpDent = readdir(pDir))
+    {
+        if (strcmp(".", tmpDent->d_name) == 0 || strcmp("..", tmpDent->d_name) == 0)
+            continue;
+
+        file_type(statBuf.st_mode);
+
+        // 权限
+        printf("%o\t", statBuf.st_mode & 000777);
+        // uid  gid
+        printf("10%d\t10%d", statBuf.st_uid, statBuf.st_gid);
+        // file size
+        printf("%12ld\t", statBuf.st_size);
+        // 时间
+        int ret = stat(tmpDent->d_name, &statBuf);
+        time_t t = statBuf.st_mtime;
+        struct tm *p = gmtime(&t);
+        char s[50];
+        strftime(s, 50, "%Y-%m-%d %H:%M:%S", p);
+        printf("%s\t", s);
+
+        // 文件名
+        printf("%s\n", tmpDent->d_name);
+    }
+}
+void sys_err(const char *str)
+{
+    perror(str);
+    exit(1);
 }
