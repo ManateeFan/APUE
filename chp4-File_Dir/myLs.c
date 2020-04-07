@@ -7,6 +7,9 @@
 #include <fcntl.h>
 #include <time.h>
 
+// 输出格式
+// 文件类型   权限xxx八进制   uid     gid   size    mtime     name
+
 // 出错处理
 void sys_err(const char *str);
 
@@ -44,20 +47,20 @@ int main(int argc, char *argv[])
     }
     else if (argc > 2)
     {
-        for(int i = 2; i < argc; i++)
-            {
-                printf("%s:\n", argv[i]);
-                detailDir(argv[i]);
-            }
-    }
-        else // ls dir
+        for (int i = 2; i < argc; i++)
         {
-            for (int i = 1; i < argc; i++)
-            {
-                printf("%s:", argv[i]);
-                printDir(argv[i]);
-            }
+            printf("%s:\n", argv[i]);
+            detailDir(argv[i]);
         }
+    }
+    else // ls dir
+    {
+        for (int i = 1; i < argc; i++)
+        {
+            printf("%s:", argv[i]);
+            printDir(argv[i]);
+        }
+    }
 
     exit(0);
 }
