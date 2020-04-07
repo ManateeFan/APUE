@@ -32,7 +32,7 @@ int main()
 
     // ftruncate 设置文件大小 20B
     ftruncate(fd, 20);
-    int len = lseek(fd, 0, SEEK_SET);
+    int len = lseek(fd, 0, SEEK_END);
 
     // 创建映射区
     p = mmap(NULL, len, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
