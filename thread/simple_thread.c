@@ -21,7 +21,7 @@ int main()
     s = pthread_create(&t1, NULL, threadFunc, "Hello World\n");
     if (s != 0)
     {
-        sprintf(stderr,"pthread_create()", strerror(s));
+        fprintf(stderr, "pthread_create() %s", strerror(s));
         exit(EXIT_FAILURE);
     }
     printf("Message from main()\n");
@@ -30,7 +30,7 @@ int main()
     s = pthread_join(t1, &ret);
     if (s != 0)
     {
-        sprintf(stderr,"pthread_join()", strerror(s));
+        fprintf(stderr,"pthread_join() %s", strerror(s));
         exit(EXIT_FAILURE);
     }
     printf("Thread returned %ld\n", (long)ret);
