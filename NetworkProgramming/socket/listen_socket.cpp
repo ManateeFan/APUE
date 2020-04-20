@@ -41,7 +41,7 @@ int main(int argc, char *argv[])
     bzero(&address, sizeof(address));
     address.sin_family = AF_INET;
 
-    // port转为网络字节序
+    // ip转为网络字节序
     inet_pton(AF_INET, ip, &address.sin_addr);
     address.sin_port = htons(port);
 
