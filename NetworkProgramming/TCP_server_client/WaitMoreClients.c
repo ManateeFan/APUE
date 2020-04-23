@@ -30,22 +30,25 @@ int main(int argc, char *argv[])
         printf("usage:%s ip_address port_number\n", argv[0]);
         return 1;
     }
-    int sockfd;
+    int sockfds[5];
     struct sockaddr_in serverAddr;
     const char *ip = argv[1];
     int port = atoi(argv[2]);
 
-    bzero(&serverAddr, sizeof(serverAddr));
-    serverAddr.sin_family = AF_INET;
-    serverAddr.sin_port = htons(port);
-    inet_pton(AF_INET, ip, &serverAddr.sin_addr);
+    for (int i = 0; i < 5; i++)
+    {
+        bzero(&serverAddr, sizeof(serverAddr));
+        serverAddr.sin_family = AF_INET;
+        serverAddr.sin_port = htons(port);
+        inet_pton(AF_INET, ip, &serverAddr.sin_addr);
 
-    sockfd = socket(PF_INET, SOCK_STREAM, 0);
-    assert(sockfd >= 0);
+        sockfds[i] = socket(PF_INET, SOCK_STREAM, 0);
+        assert(sockfds[i] >= 0);
 
-    int ret = connect(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-    assert(ret != -1);
+        int ret = connect(sockfds[i], (struct sockaddr *)&serverAddr, sizeof(serverAddr));
+        assert(ret != -1);
+    }
 
-    str_cli(stdin, sockfd);
+    str_cli(stdin, sockfds[0]);
     exit(0);
 }

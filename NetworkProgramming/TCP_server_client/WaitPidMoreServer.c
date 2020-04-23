@@ -7,15 +7,13 @@
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
-#include <signal.h>
-
 
 void str_echo(int sockfd)
 {
     size_t n;
     char buf[BUFSIZ];
 
-    while((n = read(sockfd, buf, BUFSIZ)) > 0)
+    while ((n = read(sockfd, buf, BUFSIZ)) > 0)
     {
         assert(n > 0);
         write(sockfd, buf, n);
@@ -26,8 +24,10 @@ void sig_chld(int signo)
 {
     pid_t pid;
     int stat;
-    pid = wait(&stat);
-    printf("Child %d terminated\n", pid);
+    while ((pid = waitpid(-1, &stat, WNOHANG)) > 0)
+    {
+        printf("Child %d terminated\n", pid);
+    }
     return;
 }
 
@@ -60,18 +60,18 @@ int main(int argc, char *argv[])
     ret = listen(listenfd, 5);
     assert(ret != -1);
     signal(SIGCHLD, sig_chld);
-    for(; ; )
+    for (;;)
     {
         clientLen = sizeof(clientAddr);
-        connfd = accept(listenfd, (sockaddr*)&clientAddr, &clientLen);
+        connfd = accept(listenfd, (struct sockaddr *)&clientAddr, &clientLen);
         assert(connfd >= 0);
-        if((child = fork()) == 0)   // child
+        if ((child = fork()) == 0) // child
         {
-            close(listenfd);    // 子进程关闭监听套接字
-            str_echo(connfd);   // 处理客户
+            close(listenfd);  // 子进程关闭监听套接字
+            str_echo(connfd); // 处理客户
             exit(0);
         }
-        close(connfd);  // 父进程关闭已连接套接字
+        close(connfd); // 父进程关闭已连接套接字
     }
     return 0;
 }

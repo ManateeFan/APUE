@@ -41,10 +41,8 @@ int main(int argc, char *argv[])
     inet_pton(AF_INET, ip, &serverAddr.sin_addr);
 
     sockfd = socket(PF_INET, SOCK_STREAM, 0);
-    assert(sockfd >= 0);
 
     int ret = connect(sockfd, (struct sockaddr*)&serverAddr, sizeof(serverAddr));
-    assert(ret != -1);
 
     str_cli(stdin, sockfd);
     exit(0);
