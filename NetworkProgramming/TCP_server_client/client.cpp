@@ -8,21 +8,6 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-void str_cli(FILE *fp, int sockfd)
-{
-  char line[BUFSIZ];
-  char get[BUFSIZ];
-
-  while (fgets(line, BUFSIZ, fp) != NULL)
-  {
-    write(sockfd, line, sizeof(line));
-    if (read(sockfd, get, BUFSIZ) > 0)
-    {
-      fputs(get, stdout);
-    }
-  }
-}
-
 int main(int argc, char *argv[])
 {
   if (argc <= 2)
@@ -46,6 +31,11 @@ int main(int argc, char *argv[])
   int ret = connect(sockfd, (struct sockaddr *)&serverAddr, sizeof(serverAddr));
   assert(ret != -1);
 
-  str_cli(stdin, sockfd);
+  char buf[BUFSIZ];
+  while ((ret = read(sockfd, buf, BUFSIZ)) > 0)
+  {
+    write(STDOUT_FILENO, buf, ret);
+  }
+  close(sockfd);
   exit(0);
 }

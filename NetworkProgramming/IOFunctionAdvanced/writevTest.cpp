@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
             {
                 /* 为file_buf动态分配内存，大小为file_stat.st_size + 1，再将文件内容读入缓存区中 */
                 int fd = open(file_name, O_RDONLY);
-                file_buf = new char[file_stat.st_size + 1];
+                file_buf = (char *)malloc(file_stat.st_size + 1);
                 memset(file_buf, '\0', file_stat.st_size + 1);
                 if (read(fd, file_buf, file_stat.st_size) < 0)
                 {
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
             /* 将http应答状态行、头部字段和空行加入head_buf中 */
             ret = snprintf(header_buf, BUFFER_SIZE - 1, "%s %s\r\n", "HTTP/1.1", status_line[0]);
             len += ret;
-            ret = snprintf(header_buf + len, BUFFER_SIZE - 1 - len, "Content-Length: %d\r\n", file_stat.st_size);
+            ret = snprintf(header_buf + len, BUFFER_SIZE - 1 - len, "Content-Length: %lld\r\n", file_stat.st_size);
             len += ret;
             ret = snprintf(header_buf, BUFFER_SIZE - 1 - len, "%s", "\r\n");
             /* 利用writev将head_buf和file_buf的内容一块写出 */
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
             send(connfd, header_buf, strlen(header_buf), 0);
         }
         close(connfd);
-        delete[] file_buf;
+        free(file_buf);
     }
 
     close(sock);
