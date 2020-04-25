@@ -35,9 +35,9 @@ int main(int argc, char *argv[])
 
     if ((connect(sock, (struct sockaddr *)&serverAddr, sizeof(serverAddr))) != -1)
     {
-        char buffer[BUFSIZ];
-        memset(buffer, 'a', BUFSIZ);
-        send(sock, buffer, BUFSIZ, 0);
+        char buffer[512];
+        memset(buffer, 'a', 512);
+        send(sock, buffer, 512, 0);
     }
 
     close(sock);
