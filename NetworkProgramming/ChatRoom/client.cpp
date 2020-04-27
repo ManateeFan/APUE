@@ -10,7 +10,8 @@
 #include <fcntl.h>
 #include <stdlib.h>
 #include <poll.h>
-constexpr int BUFFER_SIZE = 64;
+
+#define BUFFER_SIZE 64
 
 int main(int argc, char *argv[])
 {
@@ -42,7 +43,7 @@ int main(int argc, char *argv[])
     fds[0].events = POLLIN;
     fds[0].revents = 0;
     fds[1].fd = sockfd;
-    fds[1].events = POLLIN;
+    fds[1].events = POLLIN | POLLRDHUP;
     fds[1].revents = 0;
 
     char *read_buf[BUFFER_SIZE];
@@ -59,6 +60,11 @@ int main(int argc, char *argv[])
             break;
         }
 
+        if (fds[1].revents & POLLRDHUP)
+        {
+            printf("server close the connection\n");
+            break;
+        }
         if (fds[1].revents & POLLIN)
         {
             memset(read_buf, '\0', BUFFER_SIZE);
