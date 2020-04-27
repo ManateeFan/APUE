@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
                 {
                     const char *info = "too many users\n";
                     printf("%s", info);
-                    send(connfd, info, sizeof(info));
+                    send(connfd, info, sizeof(info), 0);
                     close(connfd);
                     continue;
                 }
