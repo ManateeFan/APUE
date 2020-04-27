@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     assert(ret != -1);
 
     /* 创建user数组，分配FD_LIMIT个client_data对象。每个socket连接获得这一个对象 */
-    auto users = new client_data[FD_LIMIT];
+    client_data *users = new client_data[FD_LIMIT];
     pollfd fds[USER_LIMIT + 1];
     int user_counter = 0;
     for (int i = 1; i <= user_counter; i++)
