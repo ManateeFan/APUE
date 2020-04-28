@@ -5,19 +5,18 @@
 #include <assert.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <errno.h>
 #include <string.h>
-#include <fcntl.h>
 #include <stdlib.h>
 #include <poll.h>
+#include <fcntl.h>
 
-#define BUFFER_SIZE 64
+constexpr int BUFFER_SIZE = 64;
 
 int main(int argc, char *argv[])
 {
     if (argc <= 2)
     {
-        printf("usage: %s ip_address port_number\n", argv[0]);
+        printf("usage: %s ip_address port_number\n", basename(argv[0]));
         return 1;
     }
     const char *ip = argv[1];
@@ -39,14 +38,16 @@ int main(int argc, char *argv[])
     }
 
     pollfd fds[2];
+    /* 注册文件描述符0（标准输入）的读事件 */
     fds[0].fd = 0;
     fds[0].events = POLLIN;
     fds[0].revents = 0;
+    /* 注册文件描述符sockfd的读事件 */
     fds[1].fd = sockfd;
     fds[1].events = POLLIN | POLLRDHUP;
     fds[1].revents = 0;
 
-    char *read_buf[BUFFER_SIZE];
+    char read_buf[BUFFER_SIZE];
     int pipefd[2];
     int ret = pipe(pipefd);
     assert(ret != -1);
@@ -59,13 +60,12 @@ int main(int argc, char *argv[])
             printf("poll failure\n");
             break;
         }
-
         if (fds[1].revents & POLLRDHUP)
         {
             printf("server close the connection\n");
             break;
         }
-        if (fds[1].revents & POLLIN)
+        else if (fds[1].revents & POLLIN)
         {
             memset(read_buf, '\0', BUFFER_SIZE);
             recv(fds[1].fd, read_buf, BUFFER_SIZE - 1, 0);
@@ -73,8 +73,9 @@ int main(int argc, char *argv[])
         }
         if (fds[0].revents & POLLIN)
         {
-            ret = splice(0, NULL, pipefd[1], NULL, 32768, SPLICE_F_MORE | SPLICE_F_MOVE);
-            ret = splice(pipefd[0], NULL, sockfd, NULL, 32768, SPLICE_F_MORE | SPLICE_F_MOVE);
+            /* splice实现将用户输入之间写到sockfd的内核发送缓冲区 */
+            splice(STDIN_FILENO, nullptr, pipefd[1], nullptr, 32768, SPLICE_F_MORE | SPLICE_F_MOVE);
+            splice(pipefd[0], nullptr, sockfd, nullptr, 32768, SPLICE_F_MORE | SPLICE_F_MOVE);
         }
     }
     close(sockfd);
