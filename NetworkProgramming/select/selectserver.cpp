@@ -38,7 +38,7 @@ int main()
 
     for (;;) {
         rset = allset;
-        nready = select(maxfd + 1, &rset, NULL, NULL, NULL);
+        nready = select(maxfd + 1, &rset, NULL, NULL, NULL); // 第一个参数是读和写集合中最大的文件描述符+1
 
         if (FD_ISSET(listenfd, &rset)) // listenfd可读，表明有新客户连接
         {
@@ -47,14 +47,15 @@ int main()
             printf("received from %s at port %d\n",
                 inet_ntop(AF_INET, &cliAddr.sin_addr.s_addr, str, sizeof(str)),
                 ntohs(cliAddr.sin_port));
-
+            
+            // 将新来的文件描述符存储
             for (i = 0; i < FD_SETSIZE; i++) {
                 if (client[i] < 0) {
                     client[i] = connfd;
                     break;
                 }
             }
-
+            // 文件描述符数量超过select的限制
             if (i == FD_SETSIZE) {
                 write(STDOUT_FILENO, "Too many clients\n",
                     sizeof("Too many clients\n"));
@@ -72,13 +73,13 @@ int main()
                 continue; // 无可读描述符
             }
         }
-
+        // 处理已连接的客户的文件描述符上的各种事件
         for (i = 0; i < maxi; i++) {
             int n;
             if ((sockfd = client[i]) < 0)
                 continue;
             if (FD_ISSET(sockfd, &rset)) {
-                if ((n = read(sockfd, buf, BUFSIZ)) == 0) // connection closed by client;
+                if ((n = read(sockfd, buf, BUFSIZ)) == 0) // connection closed by client; 接收到客户发来的FIN请求后，对fd读返回0
                 {
                     close(sockfd);
                     FD_CLR(sockfd, &allset);
