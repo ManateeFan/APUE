@@ -27,7 +27,6 @@ int main(int argc, char **argv)
     serv_addr.sin_port = htons(atoi(argv[1]));
 
     int ret = bind(serv_sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-    assert(ret != -1);
 
     ret = listen(serv_sock, 5);
     assert(ret != -1);
