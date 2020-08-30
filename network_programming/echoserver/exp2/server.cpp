@@ -8,16 +8,6 @@
 #include <arpa/inet.h>
 #include <assert.h>
 
-
-void strEcho(int connfd)
-{
-    int n;
-    char buf[BUFSIZ];
-    while((n = read(connfd, buf, sizeof(buf))) > 0)
-    {
-        write(connfd, buf, n);
-    }
-}
 int main(int argc, char** argv)
 {
     int listenfd, connfd;
@@ -46,7 +36,12 @@ int main(int argc, char** argv)
         if((child_pid = fork()) == 0)
         {
             close(listenfd);
-            strEcho(connfd);
+            int n;
+            char buf[BUFSIZ];
+            while ((n = read(connfd, buf, sizeof(buf))) > 0)
+            {
+                write(connfd, buf, n);
+            }
             exit(EXIT_SUCCESS);
         }
         close(connfd);
