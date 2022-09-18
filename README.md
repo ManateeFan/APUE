@@ -1,5 +1,5 @@
 # Linux System Programming
-阅读APUE、UNP、linux高性能服务器编程，记录书中的例子。
+APUE、UNP
 
 ## Network Demo
 1. [Chat-Room](https://github.com/ManateeFan/Linux-System-Programming/tree/master/NetworkProgramming/ChatRoom)
