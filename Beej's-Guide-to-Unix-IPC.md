@@ -100,3 +100,63 @@ This time fer sure!
 You entered: This time fer sure!
 ```
 `sa.sa_flags = SA_RESTART` can restart the interrupt system call `fgets()`.
+
+## 3.2 Async signal safe function
+
+- It cant be safely called from within a signal handler.
+- `write()` is async-safe, while `printf()` is not.
+- Can't alter any shared(e.g. global) data, with one exception: variables that are declared to be of storage class and type `volatile sig_atomic_t`.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <errno.h>
+#include <signal.h>
+
+volatile sig_atomic_t got_usr1;
+
+void sigusr1_handler(int sig)
+{
+    got_usr1 = 1;
+}
+
+int main(void)
+{
+    struct sigaction sa;
+
+    got_usr1 = 0;
+
+    sa.sa_handler = sigusr1_handler;
+    sa.sa_flags = 0;
+    sigemptyset(&sa.sa_mask);
+
+    if (sigaction(SIGUSR1, &sa, NULL) == -1) {
+        perror("sigaction");
+        exit(1);
+    }
+
+    while (!got_usr1) {
+        printf("PID %d: working hard...\n", getpid());
+        sleep(1);
+    }
+
+    printf("Done in by SIGUSR1!\n");
+
+    return 0;
+}
+```
+
+`kill -USR1 931605`
+
+```
+PID 931605: working hard...
+PID 931605: working hard...
+PID 931605: working hard...
+PID 931605: working hard...
+PID 931605: working hard...
+Done in by SIGUSR1!
+```
+
+## 3.3 signal()
+- Discouraged.
